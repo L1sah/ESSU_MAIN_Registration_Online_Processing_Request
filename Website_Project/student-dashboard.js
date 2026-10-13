@@ -3,7 +3,6 @@
 
 /* =====================================================================
    CONFIG  -  edit these to match ESSU / the Registrar's actual data.
-   The fees below are PLACEHOLDERS. Replace them with the official rates.
    ===================================================================== */
 const CONFIG = {
   loginUrl: 'login.html',                    // where "Log out" sends the student
@@ -16,18 +15,18 @@ const CONFIG = {
   },
 
   documents: [
-    { id: 'tor',      name: 'Transcript of Records', fee: 100 },
-    { id: 'cert',     name: 'Certification',         fee: 50  },
-    { id: 'auth',     name: 'Authentication',        fee: 100 },
-    { id: 'diploma',  name: 'Diploma',               fee: 150 },
-    { id: 'hd',       name: 'Honorable Dismissal',   fee: 100 },
-    { id: 'cf',       name: 'Completion Form',       fee: 50  },
-    { id: 'ic',       name: 'Informative Copy',      fee: 50  },
-    { id: 'others',   name: 'Others',                fee: 0, custom: true } // amount assessed by the Registrar
+    { id: 'tor',      name: 'Transcript of Records' },
+    { id: 'cert',     name: 'Certification' },
+    { id: 'auth',     name: 'Authentication' },
+    { id: 'diploma',  name: 'Diploma' },
+    { id: 'hd',       name: 'Honorable Dismissal' },
+    { id: 'cf',       name: 'Completion Form' },
+    { id: 'ic',       name: 'Informative Copy' },
+    { id: 'others',   name: 'Others', custom: true } // student specifies the document
   ],
   reminders: [
-    'Pay the assessed amount at the Cashier, then present the receipt to the Registrar.',
-    'Processing usually takes 3–5 working days after payment is verified.',
+    'Wait for the Registrar to confirm that your documents are ready.',
+    'Processing usually takes 3–5 working days.',
     'Bring a Student ID when claiming. Representatives need an authorization letter.'
   ]
 };
@@ -38,7 +37,6 @@ const CONFIG = {
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-const peso = n => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(n);
 const fmtDate = iso => new Intl.DateTimeFormat('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(iso));
 const fmtDateTime = iso => new Intl.DateTimeFormat('en-PH', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
 const docById = id => CONFIG.documents.find(d => d.id === id);
@@ -65,7 +63,7 @@ const ic = (n, c = 'w-5 h-5') =>
 const hydrate = (root = document) =>
   $$('i[data-icon]', root).forEach(el => { el.outerHTML = ic(el.dataset.icon, el.className || 'w-5 h-5'); });
 const applyLinks = (root = document) =>
-  $$('[data-link]', root).forEach(a => { a.setAttribute('href', CONFIG.links[a.dataset.link] || '#'); });
+  $$('[data-link]', root).forEach(a => { a.setAttribute('href', (CONFIG.links || {})[a.dataset.link] || '#'); });
 
 const STATUS = {
   submitted:  { label: 'Submitted',  desc: 'Awaiting evaluation', icon: 'file',  cls: 'bg-amber-100 text-amber-900' },
@@ -76,8 +74,6 @@ const STATUS = {
 const badge = s => `<span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap ${STATUS[s].cls}">${STATUS[s].label}</span>`;
 
 const itemsSummary = r => r.items.map(i => `${i.name}${i.copies > 1 ? ' ×' + i.copies : ''}`).join(', ');
-const totalOf = r => r.items.reduce((s, i) => s + i.amount, 0);
-const hasAssessed = r => r.items.some(i => i.assessed);
 
 /* =====================================================================
    Data layer (demo: localStorage). Replace load/save with fetch() calls
@@ -85,21 +81,21 @@ const hasAssessed = r => r.items.some(i => i.assessed);
    ===================================================================== */
 const year = new Date().getFullYear();
 const day = n => new Date(Date.now() - n * 864e5).toISOString();
-const mkItem = (id, copies, remarks = '') => { const d = docById(id); return { id, name: d.name, copies, remarks, amount: d.fee * copies }; };
+const mkItem = (id, copies, remarks = '') => ({ id, name: docById(id).name, copies, remarks });
 
 function seedState() {
   return {
     seq: 3,
     user: { name: '', course: '', studentNo: '', email: '' },
     requests: [
-      { id: `REQ-${year}-0003`, createdAt: day(1), status: 'submitted', payment: 'unpaid',
+      { id: `REQ-${year}-0003`, createdAt: day(1), status: 'submitted',
         items: [mkItem('ic', 1, 'For scholarship application')],
         history: [{ status: 'submitted', at: day(1), note: 'Request received. Awaiting evaluation.' }] },
-      { id: `REQ-${year}-0002`, createdAt: day(3), status: 'processing', payment: 'paid',
+      { id: `REQ-${year}-0002`, createdAt: day(3), status: 'processing',
         items: [mkItem('tor', 2, 'For employment'), mkItem('cert', 1)],
         history: [{ status: 'submitted', at: day(3), note: 'Request received.' },
                   { status: 'processing', at: day(2), note: 'Your documents are being prepared.' }] },
-      { id: `REQ-${year}-0001`, createdAt: day(9), status: 'released', payment: 'paid',
+      { id: `REQ-${year}-0001`, createdAt: day(9), status: 'released',
         items: [mkItem('cert', 1, 'Certificate of Enrollment')],
         history: [{ status: 'submitted', at: day(9), note: 'Request received.' },
                   { status: 'processing', at: day(8), note: 'Your documents are being prepared.' },
@@ -128,7 +124,7 @@ const state = loadState();
    UI shell: nav, breadcrumb, toast, modal
    ===================================================================== */
 const ROUTES = [
-  { id: 'dashboard', label: 'Home' },
+  { id: 'dashboard', label: '' },
   { id: 'new',       label: 'New Request' },
   { id: 'requests',  label: 'My Requests' },
   { id: 'profile',   label: 'Profile' }
@@ -179,7 +175,7 @@ function viewDashboard() {
         <h1 class="font-display font-bold text-4xl sm:text-5xl leading-[1.12] text-ess-800">Welcome, Student</h1>
         <p class="mt-3 font-medium text-ess-600">ESSU Main: Registrar Online Processing System</p>
         <p class="mt-5 max-w-xl text-lg text-slate-600 leading-relaxed">
-          Request documents, track the status of your application, and settle transactions with the Registrar&rsquo;s Office &mdash; without lining up.
+          Request documents and track the status of your application with the Registrar&rsquo;s Office &mdash; without lining up.
         </p>
         <div class="mt-8 flex flex-wrap gap-4">
           <a href="#new" class="btn-gold">${ic('plus', 'w-4 h-4')} New Request</a>
@@ -223,7 +219,7 @@ function viewNew() {
   <div class="view-in">
     <div class="mb-9">
       <h1 class="font-display font-bold text-3xl sm:text-4xl text-ess-800">Request for Credential / Assessment</h1>
-      <p class="mt-2 text-slate-600">Select the documents you need. The Cashier will collect the assessed amount.</p>
+      <p class="mt-2 text-slate-600">Select the documents you need.</p>
     </div>
 
     <form id="reqForm" class="space-y-6" novalidate>
@@ -254,7 +250,6 @@ function viewNew() {
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" class="doc-check w-5 h-5 rounded accent-[#25604a] shrink-0">
                 <span class="font-medium text-slate-900">${esc(d.name)}</span>
-                ${d.custom ? '' : `<span class="text-xs text-slate-500">${peso(d.fee)} per copy</span>`}
               </label>
               ${d.custom ? `<input type="text" class="doc-other field mt-3" maxlength="80" placeholder="Specify the document" disabled aria-label="Specify other document">` : ''}
             </div>
@@ -271,7 +266,7 @@ function viewNew() {
         <button type="reset" class="btn-ghost">Clear form</button>
       </div>
       <div class="text-xs text-slate-500 leading-relaxed max-w-2xl space-y-2">
-        <p>When your documents are ready, go to the Registrar&rsquo;s Office and pay at the Cashier.</p>
+        <p>You will be notified when your documents are ready for pick-up at the Registrar&rsquo;s Office.</p>
         <p>Your personal information is used only to process this request and is protected under the Data Privacy Act of 2012 (RA 10173).</p>
       </div>
     </form>
@@ -313,8 +308,8 @@ function viewNew() {
       if (d.custom) {
         const spec = $('.doc-other', row).value.trim();
         if (!spec) { missing = row; return; }
-        items.push({ id: d.id, name: `Others: ${spec}`, copies, remarks, amount: 0, assessed: true });
-      } else items.push({ id: d.id, name: d.name, copies, remarks, amount: d.fee * copies });
+        items.push({ id: d.id, name: `Others: ${spec}`, copies, remarks });
+      } else items.push({ id: d.id, name: d.name, copies, remarks });
     });
     if (missing) { toast('Specify the document under “Others”.', 'error'); $('.doc-other', missing).focus(); return; }
     if (!items.length) { toast('Select at least one document.', 'error'); return; }
@@ -323,7 +318,7 @@ function viewNew() {
     const now = new Date().toISOString();
     const req = {
       id: `REQ-${year}-${String(state.seq).padStart(4, '0')}`,
-      createdAt: now, status: 'submitted', payment: 'unpaid', items,
+      createdAt: now, status: 'submitted', items,
       history: [{ status: 'submitted', at: now, note: 'Request received. Awaiting evaluation.' }]
     };
     state.requests.push(req);
@@ -504,15 +499,14 @@ function openRequest(id) {
         </dl>
 
         <div class="overflow-x-auto rounded-xl border border-slate-200">
-          <table class="w-full text-sm min-w-[520px]">
+          <table class="w-full text-sm min-w-[420px]">
             <thead class="bg-slate-50 text-left text-xs font-semibold text-slate-600">
-              <tr><th scope="col" class="px-4 py-3">Document</th><th scope="col" class="px-4 py-3 text-center">No. of copies</th><th scope="col" class="px-4 py-3 text-right">Amount</th><th scope="col" class="px-4 py-3">Remarks</th></tr>
+              <tr><th scope="col" class="px-4 py-3">Document</th><th scope="col" class="px-4 py-3 text-center">No. of copies</th><th scope="col" class="px-4 py-3">Remarks</th></tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
               ${r.items.map(i => `<tr>
                 <td class="px-4 py-3 font-medium text-slate-900">${esc(i.name)}</td>
                 <td class="px-4 py-3 text-center">${i.copies}</td>
-                <td class="px-4 py-3 text-right whitespace-nowrap">${i.assessed ? '<span class="text-slate-500">To be assessed</span>' : peso(i.amount)}</td>
                 <td class="px-4 py-3 text-slate-600">${esc(i.remarks) || '&mdash;'}</td>
               </tr>`).join('')}
             </tbody>
@@ -572,13 +566,11 @@ const NAV_ACTIONS = [
   { keys: ['profile', 'account', 'edit profile'],         label: 'Profile',     act: { type: 'go', hash: 'profile' } },
   { keys: ['log out', 'logout', 'sign out'],              label: 'Log out',     act: { type: 'logout' } }
 ];
-const HELP_KEYS = ['faq', 'faqs', 'help', 'how long', 'fee', 'fees', 'claim', 'contact', 'email',
-                   'question', 'registrar', 'pay', 'payment', 'cashier'];
+const HELP_KEYS = ['help', 'how long', 'claim', 'contact', 'email', 'question', 'registrar'];
 
 function helpItems() {
   const h = CONFIG.help;
   return [
-    { icon: 'info', label: 'Read the FAQs', sub: 'Fees, processing time and claiming', act: { type: 'link', href: h.faqUrl } },
     { icon: 'mail', label: 'Email the Registrar', sub: h.registrarEmail,
       act: { type: 'link', href: `mailto:${h.registrarEmail}?subject=${encodeURIComponent('Registrar inquiry')}` } }
   ];
@@ -626,7 +618,7 @@ function runSearch(raw) {
   // 4. No results
   let intro = '';
   if (!groups.length) {
-    intro = `<p class="px-4 pt-4 pb-1 text-sm text-slate-600">No results for &ldquo;${esc(raw.trim())}&rdquo;. Need help? Try one of these:</p>`;
+    intro = `<p class="px-4 pt-4 pb-1 text-sm text-slate-600">No results for &ldquo;${esc(raw.trim())}&rdquo;. Need help? Try this:</p>`;
     groups.push(['Help', helpItems()]);
   }
 
