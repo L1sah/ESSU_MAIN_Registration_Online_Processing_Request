@@ -124,7 +124,7 @@ const state = loadState();
    UI shell: nav, breadcrumb, toast, modal
    ===================================================================== */
 const ROUTES = [
-  { id: 'dashboard', label: '' },
+  { id: 'dashboard', label: 'Home' },
   { id: 'new',       label: 'New Request' },
   { id: 'requests',  label: 'My Requests' },
   { id: 'profile',   label: 'Profile' }
