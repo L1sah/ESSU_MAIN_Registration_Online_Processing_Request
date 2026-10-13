@@ -14,7 +14,6 @@ const requests = [
   {id:"REQ-2026-0007", name:"Diane Rose Villanueva", sno:"2021-00789", course:"BS Hospitality Management", type:"Completion Form", docs:"Completion Form", status:"Cancelled", filed:"2026-09-05", purpose:"Requirement for OJT", contact:"0917 663 2201"},
   {id:"REQ-2026-0008", name:"Christian Dave Abello", sno:"2019-01120", course:"BS Electrical Engineering", type:"Transcript of Records", docs:"Transcript of Records", status:"Released", filed:"2026-09-09", purpose:"Board exam application", contact:"0908 234 7712"},
   {id:"REQ-2026-0009", name:"Bea Alexandra Cruz", sno:"2022-00512", course:"BS Psychology", type:"Certification", docs:"Certificate of Grades", status:"Submitted", filed:"2026-09-23", purpose:"Transferee requirement", contact:"0926 118 9034"},
-  {id:"REQ-2026-0021", name:"Trisha Mae Boco", sno:"2024-03274", course:"BS Information Technology", type:"Certification", docs:"Certificate of Registration", status:"Submitted", filed:"2026-09-26", purpose:"Requirement for Scholarship", contact:"0987 129 3940"},
   {id:"REQ-2026-0010", name:"Michael John Rivera", sno:"2020-00981", course:"BS Computer Science", type:"Others", docs:"Special Order copy", status:"Processing", filed:"2026-09-17", purpose:"Graduate school requirement", contact:"0917 550 2210"},
   {id:"REQ-2026-0011", name:"Trisha Mae Gonzales", sno:"2021-00034", course:"BS Agriculture", type:"Informative Copy", docs:"Informative Copy ×2", status:"Released", filed:"2026-09-08", purpose:"DA scholarship renewal", contact:"0919 887 4423"},
   {id:"REQ-2026-0012", name:"Vincent Carl Padilla", sno:"2018-00654", course:"BS Civil Engineering", type:"Diploma", docs:"Diploma", status:"Released", filed:"2026-08-30", purpose:"Board exam application", contact:"0917 220 9915"},
@@ -26,6 +25,7 @@ const requests = [
   {id:"REQ-2026-0018", name:"Francis Neil Bautista", sno:"2018-00112", course:"BS Electrical Engineering", type:"Diploma", docs:"Diploma (replacement)", status:"Processing", filed:"2026-09-16", purpose:"Lost original copy", contact:"0928 663 5510"},
   {id:"REQ-2026-0019", name:"Grace Anne Villareal", sno:"2023-00902", course:"BS Psychology", type:"Others", docs:"Certified true copy of grades", status:"Submitted", filed:"2026-09-23", purpose:"Internship requirement", contact:"0906 118 7743"},
   {id:"REQ-2026-0020", name:"Julius Caezar Marquez", sno:"2019-00567", course:"BS Computer Science", type:"Informative Copy", docs:"Informative Copy", status:"Released", filed:"2026-09-07", purpose:"Graduate school application", contact:"0917 552 8801"},
+  {id:"REQ-2026-0021", name:"Trisha Mae Boco", sno:"2024-03274", course:"BS Information Technology", type:"Certification", docs:"Certificate of Registration", status:"Submitted", filed:"2026-09-26", purpose:"Requirement for Scholarship", contact:"0987 129 3940"},
 ];
 
 let currentType = "All";
